@@ -26,5 +26,5 @@ public class User {
     private Role role;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private List<CustomAuditEvent> events;
+    private List<AuditEvent> events;
 }

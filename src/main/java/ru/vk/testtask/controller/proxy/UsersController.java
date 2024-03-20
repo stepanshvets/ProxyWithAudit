@@ -1,45 +1,52 @@
 package ru.vk.testtask.controller.proxy;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import ru.vk.testtask.dto.proxy.Post;
 import ru.vk.testtask.dto.proxy.User;
 import ru.vk.testtask.service.ProxyService;
 
-import javax.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/api/users")
+@RequiredArgsConstructor
 public class UsersController {
-    @Autowired
-    private ProxyService service;
+    private final ProxyService service;
 
-    public String getURLValue(HttpServletRequest request) {
-        String url = request.getRequestURI();
-        return url;
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    public Object getAll() {
+        return service.getResult("/users");
     }
 
-    @GetMapping(value = {"", "/", "/{id}", "/{id}/albums", "/{id}/posts"}, produces = MediaType.APPLICATION_JSON_VALUE)
-    public Object get(HttpServletRequest request) {
-        String url = getURLValue(request).substring("/api".length());
-        return service.getResult(url);
+    @GetMapping(value={"/{id}"}, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Cacheable(value = "users", key = "#id")
+    public Object getById(@PathVariable Integer id) {
+        return service.getResult("/users/" + id);
     }
 
-    @PostMapping(value = {"", "/"}, produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value={"/{id}/albums"}, produces = MediaType.APPLICATION_JSON_VALUE)
+    public Object getComments(@PathVariable Integer id) {
+        return service.getResult("/users/" + id + "/albums");
+    }
+
+    @PostMapping(value = {""}, produces = MediaType.APPLICATION_JSON_VALUE)
     public Object post(@RequestBody User user) {
-        return service.postResult("users", user);
+        return service.postResult("/users", user);
     }
 
     @PutMapping(value = {"/{id}"})
-    public Object put(@RequestBody User user, HttpServletRequest request) {
-        String url = getURLValue(request).substring("/api".length());
-        return service.putResult(url, user);
+    @CachePut(value = "users", key = "#id")
+    public Object put(@RequestBody User user, @PathVariable Integer id) {
+        return service.putResult("/users/" + id, user);
     }
 
-    @DeleteMapping(value = {"/{id}"})
-    public void delete(HttpServletRequest request) {
-        String url = getURLValue(request).substring("/api".length());
-        service.deleteResult(url);
+    @DeleteMapping("/{id}")
+    @CacheEvict(value = "users", key = "#id")
+    public void delete(@PathVariable Integer id) {
+        service.deleteResult("/users/" + id);
     }
-
 }

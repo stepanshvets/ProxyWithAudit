@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ru.vk.testtask.audit.AuditService;
-import ru.vk.testtask.model.CustomAuditEvent;
+import ru.vk.testtask.model.AuditEvent;
 
 import java.util.List;
 
@@ -17,7 +17,7 @@ public class AuditController {
     private final AuditService auditService;
 
     @GetMapping()
-    public List<CustomAuditEvent> getByUserId(@RequestParam Integer userId) {
+    public List<AuditEvent> getByUserId(@RequestParam Integer userId) {
         return auditService.getByUserId(userId);
     }
 }

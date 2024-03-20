@@ -3,7 +3,6 @@ package ru.vk.testtask.audit;
 import org.springframework.context.ApplicationEvent;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.HashMap;
 
 public class HttpRequestAuditEvent extends ApplicationEvent {
     private final String principal;

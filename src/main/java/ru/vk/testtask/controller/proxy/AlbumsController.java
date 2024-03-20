@@ -1,45 +1,50 @@
 package ru.vk.testtask.controller.proxy;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import ru.vk.testtask.dto.proxy.Album;
 import ru.vk.testtask.service.ProxyService;
 
-import javax.servlet.http.HttpServletRequest;
-
 @RestController
 @RequestMapping("/api/albums")
+@RequiredArgsConstructor
 public class AlbumsController {
-    @Autowired
-    private ProxyService service;
+    private final ProxyService service;
 
-    public String getURLValue(HttpServletRequest request) {
-        return request.getRequestURI();
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    public Object getAll() {
+        return service.getResult("/albums");
     }
 
-    @GetMapping(value = {"", "/", "/{id}", "/{id}/posts"}, produces = MediaType.APPLICATION_JSON_VALUE)
-    public Object get(HttpServletRequest request) {
-        System.out.println();
-        String url = getURLValue(request).substring("/api".length());
-        return service.getResult(url);
+    @GetMapping(value={"/{id}"}, produces = MediaType.APPLICATION_JSON_VALUE)
+    @Cacheable(value = "albums", key = "#id")
+    public Object getById(@PathVariable Integer id) {
+        return service.getResult("/albums/" + id);
     }
 
-    @PostMapping(value = {"", "/"}, produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value={"/{id}/photos"}, produces = MediaType.APPLICATION_JSON_VALUE)
+    public Object getPhotos(@PathVariable Integer id) {
+        return service.getResult("/albums/" + id + "/photos");
+    }
+
+    @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public Object post(@RequestBody Album album) {
-        return service.postResult("albums", album);
+        return service.postResult("/albums", album);
     }
 
     @PutMapping(value = {"/{id}"})
-    public Object put(@RequestBody Album album, HttpServletRequest request) {
-        String url = getURLValue(request).substring("/api".length());
-        return service.putResult(url, album);
+    @CachePut(value = "albums", key = "#id")
+    public Object put(@RequestBody Album album, @PathVariable Integer id) {
+        return service.putResult("/albums/" + id, album);
     }
 
-    @DeleteMapping(value = {"/{id}"})
-    public void delete(HttpServletRequest request) {
-        String url = getURLValue(request).substring("/api".length());
-        service.deleteResult(url);
+    @DeleteMapping("/{id}")
+    @CacheEvict(value = "albums", key = "#id")
+    public void delete(@PathVariable Integer id) {
+        service.deleteResult("/albums/" + id);
     }
-
 }

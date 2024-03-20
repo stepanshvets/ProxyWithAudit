@@ -10,7 +10,7 @@ import java.util.Date;
 @Table(name = "AuditEvent")
 @Data
 @NoArgsConstructor
-public class CustomAuditEvent {
+public class AuditEvent {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -21,17 +21,21 @@ public class CustomAuditEvent {
 
     private String URL;
 
+    private String method;
+
     private String parameters;
 
     private String ip;
+
     @ManyToOne()
     @JoinColumn(name = "user_id")
     private User user;
 
-    public CustomAuditEvent(Date timestamp, String type, String URL, String parameters, String ip, User user) {
+    public AuditEvent(Date timestamp, String type, String URL, String method, String parameters, String ip, User user) {
         this.timestamp = timestamp;
         this.type = type;
         this.URL = URL;
+        this.method = method;
         this.parameters = parameters;
         this.ip = ip;
         this.user = user;

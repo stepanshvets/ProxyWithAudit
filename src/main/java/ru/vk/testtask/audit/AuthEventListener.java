@@ -8,7 +8,7 @@ import org.springframework.security.authentication.event.AuthenticationSuccessEv
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.FilterInvocation;
 import org.springframework.stereotype.Component;
-import ru.vk.testtask.model.CustomAuditEvent;
+import ru.vk.testtask.model.AuditEvent;
 import ru.vk.testtask.model.User;
 import ru.vk.testtask.service.UserService;
 
@@ -37,14 +37,15 @@ public class AuthEventListener {
         // only for basic auth
         String type = (request.getRequestURL().toString().split("/")[1].contains("error")) ? "login error" : "no access";
 
-        CustomAuditEvent customAuditEvent = new CustomAuditEvent(new Date(),
+        AuditEvent auditEvent = new AuditEvent(new Date(),
                 type,
                 request.getRequestURL().toString(),
+                request.getMethod(),
                 request.getQueryString(),
                 request.getHeader("X-FORWARDED-FOR"),
                 user);
 
-        auditService.save(customAuditEvent);
+        auditService.save(auditEvent);
     }
 
     @EventListener
@@ -54,27 +55,29 @@ public class AuthEventListener {
         User user = userService.findByEmail(((UserDetails) event.getAuthentication()
                 .getPrincipal()).getUsername());
 
-        CustomAuditEvent customAuditEvent = new CustomAuditEvent(new Date(),
+        AuditEvent auditEvent = new AuditEvent(new Date(),
                 "login success",
+                null,
                 null,
                 null,
                 null,
                 user);
 
-        auditService.save(customAuditEvent);
+        auditService.save(auditEvent);
     }
 
-//    @EventListener
-//    public void onHttpRequestEvent(HttpRequestAuditEvent event) {
-//        User user = userService.findByEmail(event.getPrincipal());
-//
-//        CustomAuditEvent customAuditEvent = new CustomAuditEvent(new Date(),
-//                event.getType(),
-//                event.getRequest().getRequestURL().toString(),
-//                event.getRequest().getQueryString(),
-//                event.getRequest().getHeader("X-FORWARDED-FOR"),
-//                user);
-//
-//        auditService.save(customAuditEvent);
-//    }
+    @EventListener
+    public void onHttpRequestEvent(HttpRequestAuditEvent event) {
+        User user = userService.findByEmail(event.getPrincipal());
+
+        AuditEvent auditEvent = new AuditEvent(new Date(),
+                event.getType(),
+                event.getRequest().getRequestURL().toString(),
+                event.getRequest().getMethod(),
+                event.getRequest().getQueryString(),
+                event.getRequest().getHeader("X-FORWARDED-FOR"),
+                user);
+
+        auditService.save(auditEvent);
+    }
 }
